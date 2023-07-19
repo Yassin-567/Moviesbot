@@ -5,9 +5,8 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 from moviepy.editor import VideoFileClip
 
 # Set up logging
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    level=logging.INFO)
-logger = logging.getLogger(name)
+logger = logging.getLogger('video_compressor')
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
 # Define the function to handle /start command
 def start(update: Update, context):
@@ -62,5 +61,5 @@ def main():
     # Run the bot until you press Ctrl-C
     updater.idle()
 
-if name == 'main':
+if __name__ == '__main__':
     main()
