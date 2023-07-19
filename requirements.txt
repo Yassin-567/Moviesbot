@@ -1,4 +1,5 @@
-python-telegram-bot
-moviepy
-unicorn
-#flask
+python-telegram-bot==13.7 
+ requests==2.26.0 
+ moviepy 
+ gunicorn 
+ flask
