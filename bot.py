@@ -5,8 +5,9 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 from moviepy.editor import VideoFileClip
 
 # Set up logging
-logger = logging.getLogger('video_compressor')
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Define the function to handle /start command
 def start(update: Update, context):
