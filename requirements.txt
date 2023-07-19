@@ -4,4 +4,4 @@ requests==2.26.0
 gunicorn 
 flask
 moviepy==1.0.3
-python-telegram-bot==20.4
+python-telegram-bot==20.3
