@@ -7,7 +7,7 @@ from moviepy.editor import VideoFileClip
 # Set up logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('bot')
 
 # Define the function to handle /start command
 def start(update: Update, context):
