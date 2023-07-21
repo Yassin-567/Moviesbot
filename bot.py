@@ -1,11 +1,8 @@
 import logging
 import os
-import telepot
-from telepot.namedtuple import Update
+from telegram import Update
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 from moviepy.editor import VideoFileClip
-import tornado.ioloop
-import tornado.web
-import tornado.gen
 
 # Set up logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -13,70 +10,57 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger(__name__)
 
 # Define the function to handle /start command
-def start(chat_id):
-    bot.sendMessage(chat_id, "Hello! Send me a video, and I'll compress it for you.")
+def start(update: Update, context):
+    context.bot.send_message(chat_id=update.effective_chat.id, text="Hello! Send me a video, and I'll compress it for you.")
 
 # Define the function to handle video messages
-def handle_video(msg):
-    content_type, chat_type, chat_id = telepot.glance(msg)
-    
-    if content_type == 'video':
-        # Get the file_id of the video
-        file_id = msg['video']['file_id']
-        
-        # Get the file path of the video on Telegram's servers
-        file_info = bot.getFile(file_id)
-        file_path = file_info['file_path']
+def handle_video(update: Update, context):
+    video = update.message.video
 
-        # Perform video compression using MoviePy
-        clip = VideoFileClip(file_path)
+    # Get the file path of the video on Telegram's servers
+    file_path = context.bot.get_file(video.file_id).file_path
 
-        # Adjust the compression settings
-        compressed_file = "compressed_video.mp4"
-        codec = 'libx265'  # Change the codec to 'libvpx-vp9' for VP9 compression
-        bitrate = '250k'  # Adjust the bitrate as desired (e.g., '1M' for 1 Mbps)
+    # Perform video compression using MoviePy
+    clip = VideoFileClip(file_path)
 
-        # Compress the video with the specified codec and bitrate
-        clip.write_videofile(compressed_file, codec=codec, bitrate=bitrate)
+    # Adjust the compression settings
+    compressed_file = "compressed_video.mp4"
+    codec = 'libx265'  # Change the codec to 'libvpx-vp9' for VP9 compression
+    bitrate = '250k'  # Adjust the bitrate as desired (e.g., '1M' for 1 Mbps)
 
-        # Send the compressed video
-        bot.sendVideo(chat_id, open(compressed_file, 'rb'))
+    # Compress the video with the specified codec and bitrate
+    clip.write_videofile(compressed_file, codec=codec, bitrate=bitrate)
 
-        # Clean up the temporary files
-        clip.close()
-        os.remove(compressed_file)
+    # Send the compressed video
+    context.bot.send_video(chat_id=update.effective_chat.id, video=open(compressed_file, 'rb'))
 
-def delete_webhook():
-    try:
-        bot.delete_webhook()
-    except Exception as e:
-        logger.error(f"Error while deleting webhook: {e}")
+    # Clean up the temporary files
+    clip.close()
+    os.remove(compressed_file)
 
-# Tornado request handler for the Telegram bot
-class TelegramBotHandler(tornado.web.RequestHandler):
-    @tornado.gen.coroutine
-    def post(self):
-        body = self.request.body.decode()
-        update = telepot.glance(telepot.flavor.Tornado, body, bot_token)
-        handle_video(update[2])
-        self.set_status(200)
-        self.write('OK')
+# Set up the Telegram bot
+def main():
+    # Replace 'YOUR_BOT_TOKEN' with your actual bot token
+    bot_token = '5909482823:AAGNtdionMCBuhdfZXD4e9sPAiCH25gg0ko'
 
-def make_app():
-    return tornado.web.Application([
-        (r"/", TelegramBotHandler),
-    ])
+    # Initialize the bot
+    updater = Updater(token=bot_token, use_context=True)
+    dispatcher = updater.dispatcher
 
-if __name__ == "__main__":
-    # Replace '5909482823:AAGNtdionMCBuhdfZXD4e9sPAiCH25gg0ko' with your actual bot token
-    bot_token = 'YOUR_BOT_TOKEN'
-    bot = telepot.Bot(bot_token)
+    # Add command handlers
+    start_handler = CommandHandler('start', start)
+    dispatcher.add_handler(start_handler)
 
-    # Delete the webhook to switch to polling mode
-    delete_webhook()
+    # Add message handlers
+    video_handler = MessageHandler(Filters.video, handle_video)
+    dispatcher.add_handler(video_handler)
 
-    app = make_app()
-    app.listen(10000)  # Port number to listen on
-
+    # Start the bot in polling mode
+    updater.start_polling()
     logger.info("Bot started!")
-    tornado.ioloop.IOLoop.current().start()
+
+    # Run the bot until you press Ctrl-C
+    updater.idle()
+
+if __name__ == '__main__':
+    main()
