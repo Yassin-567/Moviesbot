@@ -1,7 +1,7 @@
 import logging
 import os
-from telegram import Update
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+import telepot
+from telepot.namedtuple import Update
 from moviepy.editor import VideoFileClip
 
 # Set up logging
@@ -10,33 +10,38 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger(__name__)
 
 # Define the function to handle /start command
-def start(update: Update, context):
-    context.bot.send_message(chat_id=update.effective_chat.id, text="Hello! Send me a video, and I'll compress it for you.")
+def start(chat_id):
+    bot.sendMessage(chat_id, "Hello! Send me a video, and I'll compress it for you.")
 
 # Define the function to handle video messages
-def handle_video(update: Update, context):
-    video = update.message.video
+def handle_video(msg):
+    content_type, chat_type, chat_id = telepot.glance(msg)
+    
+    if content_type == 'video':
+        # Get the file_id of the video
+        file_id = msg['video']['file_id']
+        
+        # Get the file path of the video on Telegram's servers
+        file_info = bot.getFile(file_id)
+        file_path = file_info['file_path']
 
-    # Get the file path of the video on Telegram's servers
-    file_path = context.bot.get_file(video.file_id).file_path
+        # Perform video compression using MoviePy
+        clip = VideoFileClip(file_path)
 
-    # Perform video compression using MoviePy
-    clip = VideoFileClip(file_path)
+        # Adjust the compression settings
+        compressed_file = "compressed_video.mp4"
+        codec = 'libx265'  # Change the codec to 'libvpx-vp9' for VP9 compression
+        bitrate = '250k'  # Adjust the bitrate as desired (e.g., '1M' for 1 Mbps)
 
-    # Adjust the compression settings
-    compressed_file = "compressed_video.mp4"
-    codec = 'libx265'  # Change the codec to 'libvpx-vp9' for VP9 compression
-    bitrate = '250k'  # Adjust the bitrate as desired (e.g., '1M' for 1 Mbps)
+        # Compress the video with the specified codec and bitrate
+        clip.write_videofile(compressed_file, codec=codec, bitrate=bitrate)
 
-    # Compress the video with the specified codec and bitrate
-    clip.write_videofile(compressed_file, codec=codec, bitrate=bitrate)
+        # Send the compressed video
+        bot.sendVideo(chat_id, open(compressed_file, 'rb'))
 
-    # Send the compressed video
-    context.bot.send_video(chat_id=update.effective_chat.id, video=open(compressed_file, 'rb'))
-
-    # Clean up the temporary files
-    clip.close()
-    os.remove(compressed_file)
+        # Clean up the temporary files
+        clip.close()
+        os.remove(compressed_file)
 
 # Set up the Telegram bot
 def main():
@@ -44,23 +49,17 @@ def main():
     bot_token = '5909482823:AAHOTwjj5qkbjpVN15aZuZArFCqHaR60uyg'
 
     # Initialize the bot
-    updater = Updater(token=bot_token, use_context=True)
-    dispatcher = updater.dispatcher
+    global bot
+    bot = telepot.Bot(bot_token)
 
-    # Add command handlers
-    start_handler = CommandHandler('start', start)
-    dispatcher.add_handler(start_handler)
+    # Add command and message handlers
+    bot.message_loop({'chat': handle_video,
+                      'command': lambda msg: start(msg['chat']['id'])})
 
-    # Add message handlers
-    video_handler = MessageHandler(Filters.video, handle_video)
-    dispatcher.add_handler(video_handler)
-
-    # Start the bot in polling mode
-    updater.start_polling()
     logger.info("Bot started!")
-
-    # Run the bot until you press Ctrl-C
-    updater.idle()
+    # Keep the bot running
+    while True:
+        pass
 
 if __name__ == '__main__':
     main()
