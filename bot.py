@@ -3,6 +3,9 @@ import os
 import telepot
 from telepot.namedtuple import Update
 from moviepy.editor import VideoFileClip
+import tornado.ioloop
+import tornado.web
+import tornado.gen
 
 # Set up logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -43,48 +46,28 @@ def handle_video(msg):
         clip.close()
         os.remove(compressed_file)
 
-# Create a callable class for the Gunicorn entry point
-class TelegramBotApp:
-    def __init__(self):
-        # Replace 'YOUR_BOT_TOKEN' with your actual bot token
-        self.bot_token = '5909482823:AAHOTwjj5qkbjpVN15aZuZArFCqHaR60uyg'
-        self.bot = telepot.Bot(self.bot_token)
+# Tornado request handler for the Telegram bot
+class TelegramBotHandler(tornado.web.RequestHandler):
+    @tornado.gen.coroutine
+    def post(self):
+        body = self.request.body.decode()
+        update = telepot.glance(telepot.flavor.Tornado, body, bot_token)
+        handle_video(update[2])
+        self.set_status(200)
+        self.write('OK')
 
-    def __call__(self, env, start_response):
-        try:
-            content_length = int(env.get('CONTENT_LENGTH', 0))
-            body = env['wsgi.input'].read(content_length).decode()
-            update = telepot.glance(telepot.flavor.TurboGears2, body, self.bot_token)
-            handle_video(update[2])
-            start_response('200 OK', [('Content-Type', 'text/html')])
-            return [b"OK"]
-        except Exception as e:
-            logger.error(str(e))
-            start_response('500 Internal Server Error', [('Content-Type', 'text/html')])
-            return [b"Error"]
+def make_app():
+    return tornado.web.Application([
+        (r"/", TelegramBotHandler),
+    ])
 
-if __name__ == '__main__':
-    # Create an instance of the TelegramBotApp
-    app = TelegramBotApp()
-    # Start the bot using Gunicorn
-    from gunicorn.app.base import BaseApplication
-    class StandaloneApplication(BaseApplication):
-        def __init__(self, app, options=None):
-            self.options = options or {}
-            self.application = app
-            super(StandaloneApplication, self).__init__()
+if __name__ == "__main__":
+    # Replace 'YOUR_BOT_TOKEN' with your actual bot token
+    bot_token = '5909482823:AAHOTwjj5qkbjpVN15aZuZArFCqHaR60uyg'
+    bot = telepot.Bot(bot_token)
 
-        def load_config(self):
-            config = {key: value for key, value in self.options.items()
-                      if key in self.cfg.settings and value is not None}
-            for key, value in config.items():
-                self.cfg.set(key.lower(), value)
+    app = make_app()
+    app.listen(10000)  # Port number to listen on
 
-        def load(self):
-            return self.application
-
-    options = {
-        'bind': '0.0.0.0:10000',
-        'workers': 1,  # You can increase this if needed
-    }
-    StandaloneApplication(app, options).run()
+    logger.info("Bot started!")
+    tornado.ioloop.IOLoop.current().start()
