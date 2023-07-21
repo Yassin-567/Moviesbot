@@ -1,4 +1,4 @@
-5909482823:AAFYOFK2Rsb5lphQHGZSMj_3krCN0MpZCKoimport logging
+import logging
 import os
 import telepot
 from telepot.loop import MessageLoop
