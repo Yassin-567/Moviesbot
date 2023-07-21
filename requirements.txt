@@ -1,7 +1,3 @@
-requests
-gunicorn 
-flask
-moviepy
-telepot
-poetry
 aiogram
+moviepy
+gunicorn
