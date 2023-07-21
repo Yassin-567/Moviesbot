@@ -41,7 +41,7 @@ def handle_video(msg):
         os.remove(compressed_file) 
   
 # Set up the Telegram bot 
-def main(*args, **kwargs):  # Allow for any arguments passed by Gunicorn 
+def app(*args, **kwargs):  # Allow for any arguments passed by Gunicorn 
     # Replace 'YOUR_BOT_TOKEN' with your actual bot token 
     bot_token = '5909482823:AAFYOFK2Rsb5lphQHGZSMj_3krCN0MpZCKo' 
   
@@ -54,8 +54,7 @@ def main(*args, **kwargs):  # Allow for any arguments passed by Gunicorn
   
     # Start the bot 
     logger.info("Bot started!") 
-    while True: 
-        pass 
+    return 'Bot is running' 
   
 if __name__ == '__main__':
-    main()  # Call the main() function without passing any arguments
+    app()  # Call the app() function without passing any arguments
