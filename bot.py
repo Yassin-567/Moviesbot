@@ -9,7 +9,8 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger(__name__)
 
 # Initialize the bot with your token
-bot = Bot(token='6051114065:AAGimr1GZznQxrxsVIJDYW3W5t-xzF6RgQA')
+bot_token = '6051114065:AAGimr1GZznQxrxsVIJDYW3W5t-xzF6RgQA'
+bot = Bot(token=bot_token)
 dispatcher = Dispatcher(bot)
 
 # Define the function to handle /start command
@@ -44,6 +45,8 @@ async def handle_video(message: types.Message):
     clip.close()
     os.remove(compressed_file)
 
-# Run the bot
+# Run the bot using Gunicorn
 if __name__ == '__main__':
-    executor.start_polling(dispatcher, skip_updates=True)
+    import os
+    PORT = int(os.environ.get("PORT", 5000))
+    executor.start_webhook(dispatcher, skip_updates=True, webhook_path="/webhook", host='0.0.0.0', port=PORT)
