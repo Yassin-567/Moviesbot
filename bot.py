@@ -46,6 +46,12 @@ def handle_video(msg):
         clip.close()
         os.remove(compressed_file)
 
+def delete_webhook():
+    try:
+        bot.delete_webhook()
+    except Exception as e:
+        logger.error(f"Error while deleting webhook: {e}")
+
 # Tornado request handler for the Telegram bot
 class TelegramBotHandler(tornado.web.RequestHandler):
     @tornado.gen.coroutine
@@ -62,9 +68,12 @@ def make_app():
     ])
 
 if __name__ == "__main__":
-    # Replace 'YOUR_BOT_TOKEN' with your actual bot token
-    bot_token = '5909482823:AAHOTwjj5qkbjpVN15aZuZArFCqHaR60uyg'
+    # Replace '5909482823:AAGNtdionMCBuhdfZXD4e9sPAiCH25gg0ko' with your actual bot token
+    bot_token = 'YOUR_BOT_TOKEN'
     bot = telepot.Bot(bot_token)
+
+    # Delete the webhook to switch to polling mode
+    delete_webhook()
 
     app = make_app()
     app.listen(10000)  # Port number to listen on
