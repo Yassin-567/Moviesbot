@@ -4,4 +4,4 @@ flask
 moviepy
 telepot
 poetry
-python-telegram-bot
+aiogram
