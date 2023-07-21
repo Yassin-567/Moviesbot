@@ -2,5 +2,5 @@ requests
 gunicorn 
 flask
 moviepy
-python-telegram-bot
+telepot
 poetry
