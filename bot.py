@@ -13,7 +13,7 @@ bot = Bot(token='6051114065:AAGimr1GZznQxrxsVIJDYW3W5t-xzF6RgQA')
 dispatcher = Dispatcher(bot)
 
 # Define the function to handle /start command
-@dispatcher.command(commands=['start'])
+@dispatcher.message_handler(commands=['start'])
 async def start(message: types.Message):
     await message.answer("Hello! Send me a video, and I'll compress it for you.")
 
