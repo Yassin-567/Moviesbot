@@ -1,9 +1,11 @@
 import logging
 import os
-from aiogram import Bot, Dispatcher, types
+import asyncio
+from aiogram import Bot, Dispatcher, types, executor
 from aiogram.contrib.middlewares.logging import LoggingMiddleware
 from aiogram.types import InputFile
 from moviepy.editor import VideoFileClip
+import threading
 
 # Set up logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -52,6 +54,27 @@ async def handle_video(message: types.Message):
     clip.close()
     os.remove(compressed_file)
 
+# Run the bot in a separate coroutine
+async def on_startup(dp):
+    await bot.send_message(chat_id="YOUR_ADMIN_CHAT_ID", text="Bot started!")  # Replace with your admin chat ID
+    await bot.delete_webhook()
+
+async def run_bot():
+    await bot.start_polling(skip_updates=True, on_startup=on_startup)
+
 if __name__ == '__main__':
-    from aiogram import executor
-    executor.start_polling(dp, skip_updates=True)
+    # Create the asyncio event loop
+    loop = asyncio.get_event_loop()
+
+    # Run the bot in the event loop
+    loop.run_until_complete(run_bot())
+
+    # Start the Streamlit app in a separate thread
+    def run_streamlit():
+        os.system("streamlit run your_streamlit_app.py")
+
+    streamlit_thread = threading.Thread(target=run_streamlit)
+    streamlit_thread.start()
+
+    # Run the event loop indefinitely
+    loop.run_forever()
