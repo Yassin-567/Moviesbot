@@ -9,7 +9,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger(__name__)
 
 # Initialize the bot with your token
-bot = Bot(token='YOUR_TELEGRAM_BOT_TOKEN_HERE')
+bot = Bot(token='6051114065:AAGimr1GZznQxrxsVIJDYW3W5t-xzF6RgQA')
 dispatcher = Dispatcher(bot)
 
 # Define the function to handle /start command
